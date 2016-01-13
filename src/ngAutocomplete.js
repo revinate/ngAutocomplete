@@ -34,7 +34,8 @@ angular.module( "ngAutocomplete", [])
       scope: {
         ngModel: '=',
         options: '=?',
-        details: '=?'
+        details: '=?',
+        onSelect: '&?'
       },
 
       link: function(scope, element, attrs, controller) {
@@ -93,6 +94,10 @@ angular.module( "ngAutocomplete", [])
                 scope.details = result;
 
                 controller.$setViewValue(element.val());
+
+                if (angular.isDefined(scope.onSelect)) {
+                  scope.onSelect({details: result});
+                }
               });
             }
             else {
@@ -107,11 +112,15 @@ angular.module( "ngAutocomplete", [])
         var getPlace = function(result) {
           var autocompleteService = new google.maps.places.AutocompleteService();
           if (result.name.length > 0){
+            var params = {
+              input: result.name,
+              offset: result.name.length
+            };
+            if (opts.types) {
+              params['types'] = opts.types;
+            }
             autocompleteService.getPlacePredictions(
-              {
-                input: result.name,
-                offset: result.name.length
-              },
+              params,
               function listentoresult(list, status) {
                 if(list == null || list.length == 0) {
 
@@ -132,6 +141,10 @@ angular.module( "ngAutocomplete", [])
                           element.val(detailsResult.formatted_address);
 
                           scope.details = detailsResult;
+
+                          if (angular.isDefined(scope.onSelect)) {
+                            scope.onSelect({details: detailsResult});
+                          }
 
                           //on focusout the value reverts, need to set it again.
                           var watchFocusOut = element.on('focusout', function(event) {
